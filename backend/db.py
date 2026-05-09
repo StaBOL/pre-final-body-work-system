@@ -1,14 +1,12 @@
-import sqlite3
 import os
+import psycopg
 from flask import g
-from backend.config import BASE_DIR, DB_PATH
+from backend.config import Config
 
-# --- Функции для работы внутри запросов Flask (с g) ---
 def get_db():
-    """Возвращает соединение с БД (для каждого запроса своё)."""
     if 'db' not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
+        # Подключаемся к PostgreSQL, используя URI из конфига
+        g.db = psycopg.connect(Config.SQLALCHEMY_DATABASE_URI)
     return g.db
 
 def close_db(e=None):
@@ -17,23 +15,33 @@ def close_db(e=None):
         db.close()
 
 def query_one(sql, params=()):
-    cur = get_db().execute(sql, params)
-    return cur.fetchone()
+    with get_db().cursor() as cur:
+        cur.execute(sql, params)
+        row = cur.fetchone()
+    return row
 
 def query_all(sql, params=()):
-    cur = get_db().execute(sql, params)
-    return cur.fetchall()
+    with get_db().cursor() as cur:
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+    return rows
 
 def execute(sql, params=()):
-    cur = get_db().execute(sql, params)
-    get_db().commit()
-    return cur.lastrowid
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        conn.commit()
+        # Пытаемся получить последний ID, если операция - вставка
+        try:
+            return cur.fetchone()[0]
+        except:
+            return None
 
-# --- Функция для инициализации БД (без g, работает вне приложения) ---
 def init_db():
     """Создаёт таблицы, если их нет, используя schema.sql."""
-    conn = sqlite3.connect(DB_PATH)
-    with open(os.path.join(BASE_DIR, 'schema.sql'), 'r', encoding='utf-8') as f:
-        conn.executescript(f.read())
+    conn = get_db()
+    with conn.cursor() as cur:
+        # Читаем и выполняем schema.sql
+        with open(os.path.join(BASE_DIR, 'schema.sql'), 'r', encoding='utf-8') as f:
+            cur.execute(f.read())
     conn.commit()
-    conn.close()
