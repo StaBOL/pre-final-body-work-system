@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои тренировки</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">Избранное</a>
+            <a href="my_workouts.html">Тренировки</a>
+            <a href="create_workout.html">+ Новая</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main>
+        <div id="workoutsList"></div>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        async function loadWorkouts() {
+            const container = document.getElementById('workoutsList');
+            if (!getToken()) {
+                container.innerHTML = '<p>Для просмотра тренировок <a href="login.html">войдите</a>.</p>';
+                return;
+            }
+            try {
+                const workouts = await fetchJson('/api/workouts');
+                if (workouts.length === 0) {
+                    container.innerHTML = '<p>Нет тренировок. <a href="create_workout.html">Создайте первую!</a></p>';
+                    return;
+                }
+                container.innerHTML = workouts.map(w => `
+                    <div class="workout-item" data-id="${w.id}">
+                        <h3>${escapeHtml(w.name)}</h3>
+                        <p>${new Date(w.created_at).toLocaleDateString()}</p>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="perform_workout.html?id=${w.id}"><button>🏋️ Выполнить</button></a>
+                            <button onclick="deleteWorkout(${w.id})" style="background-color:#6c757d;">✅ Завершить</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(err) {
+                container.innerHTML = '<p>Ошибка загрузки тренировок.</p>';
+            }
+        }
+
+        async function deleteWorkout(workoutId) {
+            if (!confirm('Вы уверены, что хотите завершить (удалить) эту тренировку?')) return;
+            try {
+                const response = await fetch(`/api/workouts/${workoutId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (!response.ok) throw new Error(await response.text());
+                alert('Тренировка завершена и удалена');
+                loadWorkouts(); // обновить список
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        loadWorkouts();
+    </script>
+</body>
+</html>

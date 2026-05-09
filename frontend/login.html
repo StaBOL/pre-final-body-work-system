@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header><h1>Вход в систему</h1></header>
+    <main style="justify-content: center;">
+        <form id="loginForm" style="max-width: 400px;">
+            <h3>Вход</h3>
+            <input type="email" id="loginEmail" placeholder="Email" required autofocus>
+            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+            <p style="margin-top: 1rem; font-size: 0.85rem; color: #4a627a;">
+                Тестовый пользователь:<br>
+                <strong>student@example.com</strong> / <strong>student</strong>
+            </p>
+        </form>
+    </main>
+    <script>
+        const API_BASE = '/api';
+        async function fetchJson(url, options) {
+            const res = await fetch(url, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            });
+            return res.json();
+        }
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const data = await fetchJson('/api/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            if (data.access_token) {
+                localStorage.setItem('access_token', data.access_token);
+                window.location.href = 'index.html';
+            } else {
+                alert('Ошибка входа: ' + (data.msg || 'неверный email или пароль'));
+            }
+        });
+    </script>
+</body>
+</html>
