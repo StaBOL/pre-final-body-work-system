@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выполнение тренировки</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">Избранное</a>
+            <a href="my_workouts.html">Тренировки</a>
+            <a href="create_workout.html">+ Новая</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main id="workoutContent"></main>
+    <script src="app.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const workoutId = urlParams.get('id');
+
+        if (!getToken()) {
+            alert('Для выполнения тренировки необходимо войти.');
+            window.location.href = 'login.html';
+        }
+
+        async function loadWorkout() {
+            const w = await fetchJson(`/api/workouts/${workoutId}`);
+            let html = `<h2>${w.name}</h2>`;
+            for (let ex of w.exercises) {
+                html += `<div class="workout-item"><h3>${ex.name}</h3><img src="${ex.photo_url}" style="width:100px"><br>`;
+                for (let s=1; s<=ex.sets; s++) {
+                    html += `<p>Подход ${s}: <input type="number" id="reps_${ex.id}_${s}" placeholder="повторы"> 
+                             <input type="number" id="weight_${ex.id}_${s}" placeholder="вес"> 
+                             <button onclick="logSet(${ex.id}, ${s})">Записать</button></p>`;
+                }
+                html += `</div>`;
+            }
+            document.getElementById('workoutContent').innerHTML = html;
+        }
+        async function logSet(workoutExerciseId, setNumber) {
+            const reps = document.getElementById(`reps_${workoutExerciseId}_${setNumber}`).value;
+            const weight = document.getElementById(`weight_${workoutExerciseId}_${setNumber}`).value;
+            await fetchJson(`/api/workout-exercises/${workoutExerciseId}/log`, {
+                method: 'POST',
+                body: JSON.stringify({ set_number: setNumber, reps_done: parseInt(reps), weight_used: parseFloat(weight) })
+            });
+            alert('Подход записан');
+        }
+        loadWorkout();
+    </script>
+</body>
+</html>

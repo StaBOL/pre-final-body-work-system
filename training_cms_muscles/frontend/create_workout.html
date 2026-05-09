@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создать тренировку</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">Избранное</a>
+            <a href="my_workouts.html">Тренировки</a>
+            <a href="create_workout.html">+ Новая</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main>
+        <form id="workoutForm">
+            <h2>Новая тренировка</h2>
+            <input type="text" id="workoutName" placeholder="Название тренировки" required>
+            <div id="exercisesList">
+                <h3>Добавленные упражнения</h3>
+                <div id="selectedExercises"></div>
+            </div>
+            <div id="allExercises">
+                <h3>Выберите упражнение</h3>
+                <select id="exerciseSelect"></select>
+                <input type="number" id="sets" placeholder="Подходы" value="3">
+                <input type="number" id="reps" placeholder="Повторения" value="10">
+                <button type="button" id="addExerciseBtn">Добавить упражнение</button>
+            </div>
+            <button type="submit">Сохранить тренировку</button>
+        </form>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        if (!getToken()) {
+            alert('Для создания тренировки необходимо войти.');
+            window.location.href = 'login.html';
+        }
+        let selected = [];
+        async function loadExercises() {
+            const exercises = await fetchJson('/api/exercises');
+            const select = document.getElementById('exerciseSelect');
+            select.innerHTML = exercises.map(ex => `<option value="${ex.id}">${ex.name}</option>`).join('');
+            const pending = localStorage.getItem('pendingExerciseId');
+            if (pending) {
+                const ex = exercises.find(e => e.id == pending);
+                if (ex) addExercise(ex.id, ex.name);
+                localStorage.removeItem('pendingExerciseId');
+            }
+        }
+        function addExercise(id, name) {
+            const sets = document.getElementById('sets').value;
+            const reps = document.getElementById('reps').value;
+            selected.push({ exercise_id: parseInt(id), sets: parseInt(sets), reps: parseInt(reps) });
+            renderSelected();
+        }
+        function renderSelected() {
+            const container = document.getElementById('selectedExercises');
+            container.innerHTML = selected.map((ex, idx) => `<div>${ex.name || 'упражнение'} — ${ex.sets}х${ex.reps} <button type="button" onclick="removeExercise(${idx})">Удалить</button></div>`).join('');
+        }
+        function removeExercise(idx) { selected.splice(idx,1); renderSelected(); }
+        document.getElementById('addExerciseBtn').onclick = () => {
+            const id = parseInt(document.getElementById('exerciseSelect').value);
+            const name = document.getElementById('exerciseSelect').selectedOptions[0].text;
+            addExercise(id, name);
+        };
+        document.getElementById('workoutForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('workoutName').value;
+            if (!name || selected.length===0) { alert('Заполните название и добавьте упражнения'); return; }
+            const payload = { name, exercises: selected };
+            try {
+                const result = await fetch('/api/workouts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify(payload)
+                });
+                if (!result.ok) throw new Error(await result.text());
+                alert('Тренировка создана!');
+                window.location.href = 'my_workouts.html';
+            } catch(err) { alert('Ошибка: '+err.message); }
+        };
+        loadExercises();
+    </script>
+</body>
+</html>

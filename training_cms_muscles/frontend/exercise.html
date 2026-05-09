@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Упражнение</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">Избранное</a>
+            <a href="my_workouts.html">Тренировки</a>
+            <a href="create_workout.html">+ Новая</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main id="exerciseDetail"></main>
+    <script src="app.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const exerciseId = parseInt(urlParams.get('id'));
+
+        async function loadExercise() {
+            if (!exerciseId) return;
+            const ex = await fetchJson(`/api/exercises/${exerciseId}`);
+            const fav = isFavorite(exerciseId);
+            document.getElementById('exerciseDetail').innerHTML = `
+                <div style="max-width:800px; margin:auto; background:white; padding:2rem; border-radius:1rem;">
+                    <img src="${ex.photo_url}" style="width:100%; border-radius:1rem;">
+                    <h2>${ex.name}</h2>
+                    <p><strong>Сложность:</strong> ${ex.difficulty}</p>
+                    <p><strong>Описание:</strong> ${ex.description}</p>
+                    <p><strong>Техника:</strong> ${ex.technique || 'Не указана'}</p>
+                    <div>
+                        <button onclick="toggleFav()" id="favBtn">${fav ? '💔 Удалить из избранного' : '❤️ В избранное'}</button>
+                        <button onclick="addToWorkout()">➕ Добавить в тренировку</button>
+                    </div>
+                </div>
+            `;
+        }
+        function toggleFav() {
+            if (isFavorite(exerciseId)) {
+                removeFavorite(exerciseId);
+            } else {
+                addFavorite(exerciseId);
+            }
+            const btn = document.getElementById('favBtn');
+            if (btn) btn.innerText = isFavorite(exerciseId) ? '💔 Удалить из избранного' : '❤️ В избранное';
+        }
+        function addToWorkout() {
+            if (!getToken()) {
+                alert('Для добавления в тренировку войдите в аккаунт.');
+                window.location.href = 'login.html';
+                return;
+            }
+            localStorage.setItem('pendingExerciseId', exerciseId);
+            window.location.href = 'create_workout.html';
+        }
+        loadExercise();
+    </script>
+</body>
+</html>

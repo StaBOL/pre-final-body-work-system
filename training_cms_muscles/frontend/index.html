@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировки | Главная</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🏋️ Muscle Training CMS</h1>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">⭐ Избранное</a>
+            <a href="my_workouts.html">Мои тренировки</a>
+            <a href="create_workout.html">+ Новая тренировка</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main>
+        <aside id="filters">
+            <h3>Группы мышц</h3>
+            <div id="muscleList"></div>
+        </aside>
+        <section id="exercisesList">
+            <h2>Библиотека упражнений</h2>
+            <div id="cardsContainer" class="cards-grid"></div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        let currentMuscle = 'all';
+
+        async function loadMuscleGroups() {
+            const groups = await fetchJson('/api/muscle-groups');
+            const container = document.getElementById('muscleList');
+            if (!container) return;
+            container.innerHTML = '';
+            // Кнопка "Все"
+            const allBtn = document.createElement('button');
+            allBtn.textContent = 'Все';
+            allBtn.dataset.id = 'all';
+            allBtn.onclick = () => filterExercises('all');
+            container.appendChild(allBtn);
+            // Кнопки групп
+            groups.forEach(g => {
+                const btn = document.createElement('button');
+                btn.textContent = g.name;
+                btn.dataset.id = g.id;
+                btn.onclick = () => filterExercises(g.id);
+                container.appendChild(btn);
+            });
+            highlightActive();
+        }
+
+        function highlightActive() {
+            const buttons = document.querySelectorAll('#muscleList button');
+            buttons.forEach(btn => {
+                if (btn.dataset.id == currentMuscle) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        async function filterExercises(muscleId) {
+            currentMuscle = muscleId;
+            const url = muscleId === 'all' ? '/api/exercises' : `/api/exercises?muscle=${muscleId}`;
+            const exercises = await fetchJson(url);
+            // Сортируем по id, чтобы порядок был стабильным
+            exercises.sort((a,b) => a.id - b.id);
+            const container = document.getElementById('cardsContainer');
+            if (!container) return;
+            if (exercises.length === 0) {
+                container.innerHTML = '<p>Нет упражнений в этой группе.</p>';
+                highlightActive();
+                return;
+            }
+            container.innerHTML = exercises.map(ex => `
+                <div class="exercise-card">
+                    <img src="${ex.photo_url}" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                    <div class="card-body">
+                        <h3>${ex.name}</h3>
+                        <span class="difficulty">${ex.difficulty}</span>
+                        <p>${ex.description || ''}</p>
+                        <a href="exercise.html?id=${ex.id}">Подробнее →</a>
+                        <button onclick="toggleFavorite(${ex.id})" class="fav-btn">
+                            ${isFavorite(ex.id) ? '💔 Удалить' : '❤️ В избранное'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            highlightActive();
+        }
+
+        function toggleFavorite(exId) {
+            if (isFavorite(exId)) {
+                removeFavorite(exId);
+            } else {
+                addFavorite(exId);
+            }
+            // перерисовываем текущий список, чтобы кнопка обновилась
+            filterExercises(currentMuscle);
+        }
+
+        loadMuscleGroups();
+        filterExercises('all');
+    </script>
+</body>
+</html>

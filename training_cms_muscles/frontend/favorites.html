@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Избранные упражнения</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>⭐ Избранное</h1>
+        <nav>
+            <a href="index.html">Упражнения</a>
+            <a href="favorites.html">Избранное</a>
+            <a href="my_workouts.html">Тренировки</a>
+            <a href="create_workout.html">+ Новая</a>
+            <span id="authButton"></span>
+        </nav>
+    </header>
+    <main>
+        <div id="favoritesContainer" class="cards-grid"></div>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        async function loadFavorites() {
+            const container = document.getElementById('favoritesContainer');
+            if (!container) return;
+            const favIds = getFavorites();
+            if (favIds.length === 0) {
+                container.innerHTML = '<p style="grid-column:1/-1;">Нет избранных упражнений. Добавьте на главной странице.</p>';
+                return;
+            }
+            const allExercises = await fetchJson('/api/exercises');
+            const favExercises = allExercises.filter(ex => favIds.includes(ex.id));
+            if (favExercises.length === 0) {
+                container.innerHTML = '<p style="grid-column:1/-1;">Избранные упражнения не найдены.</p>';
+                return;
+            }
+            container.innerHTML = favExercises.map(ex => `
+                <div class="exercise-card">
+                    <img src="${ex.photo_url}" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                    <div class="card-body">
+                        <h3>${ex.name}</h3>
+                        <span class="difficulty">${ex.difficulty}</span>
+                        <p>${ex.description || ''}</p>
+                        <a href="exercise.html?id=${ex.id}">Подробнее →</a>
+                        <button onclick="removeFromFav(${ex.id})" style="background:#c0392b;">🗑️ Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        async function removeFromFav(exId) {
+            removeFavorite(exId);
+            loadFavorites();
+        }
+        loadFavorites();
+    </script>
+</body>
+</html>
