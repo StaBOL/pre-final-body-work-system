@@ -1,17 +1,16 @@
 import os
 import psycopg
 from flask import g
-from backend.config import Config
+from backend.config import Config, BASE_DIR   # <-- добавили BASE_DIR
 
 def get_db():
     if 'db' not in g:
-        # Подключаемся к PostgreSQL, используя URI из конфига
         g.db = psycopg.connect(Config.SQLALCHEMY_DATABASE_URI)
     return g.db
 
 def close_db(e=None):
     db = g.pop('db', None)
-    if db is not None:
+    if db:
         db.close()
 
 def query_one(sql, params=()):
@@ -31,7 +30,6 @@ def execute(sql, params=()):
     with conn.cursor() as cur:
         cur.execute(sql, params)
         conn.commit()
-        # Пытаемся получить последний ID, если операция - вставка
         try:
             return cur.fetchone()[0]
         except:
@@ -40,8 +38,13 @@ def execute(sql, params=()):
 def init_db():
     """Создаёт таблицы, если их нет, используя schema.sql."""
     conn = get_db()
+    schema_path = os.path.join(BASE_DIR, 'schema.sql')
+    if not os.path.exists(schema_path):
+        print(f"Schema file not found at {schema_path}")
+        return
     with conn.cursor() as cur:
-        # Читаем и выполняем schema.sql
-        with open(os.path.join(BASE_DIR, 'schema.sql'), 'r', encoding='utf-8') as f:
-            cur.execute(f.read())
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            sql = f.read()
+        cur.execute(sql)
     conn.commit()
+    print("Database initialized successfully")
