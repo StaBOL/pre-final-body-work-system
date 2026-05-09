@@ -1,8 +1,7 @@
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, 'database.db')
-
 class Config:
-    SECRET_KEY = 'your-secret-key-change-in-production'
-    JWT_SECRET_KEY = 'jwt-secret-change-me'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'jwt-secret')
+    # Берём адрес базы из переменной окружения
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
