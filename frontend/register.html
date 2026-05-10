@@ -2,34 +2,21 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация | Muscle Training CMS</title>
+    <title>Регистрация</title>
     <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
-    <header>
-        <h1>🏋️ Muscle Training CMS</h1>
-        <nav>
-            <a href="index.html">Упражнения</a>
-            <a href="favorites.html">⭐ Избранное</a>
-            <a href="my_workouts.html">Мои тренировки</a>
-            <a href="create_workout.html">+ Новая тренировка</a>
-            <span id="authButton"></span>
-        </nav>
-    </header>
+    <header><h1>Регистрация</h1></header>
     <main style="justify-content: center;">
-        <form id="registerForm" style="max-width: 400px;">
-            <h3>Регистрация</h3>
+        <form id="registerForm">
+            <h3>Создать аккаунт</h3>
             <input type="email" id="regEmail" placeholder="Email" required autofocus>
             <input type="password" id="regPassword" placeholder="Пароль" required>
             <button type="submit">Зарегистрироваться</button>
-            <p style="margin-top: 1rem;">
-                Уже есть аккаунт? <a href="login.html">Войти</a>
-            </p>
+            <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
         </form>
     </main>
     <script>
-        const API_BASE = '/api';
         async function fetchJson(url, options) {
             const res = await fetch(url, {
                 headers: { 'Content-Type': 'application/json' },
@@ -39,20 +26,18 @@
             if (!res.ok) throw new Error(data.msg || 'Ошибка');
             return data;
         }
-
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
-            
             try {
-                const data = await fetchJson('/api/register', {
+                await fetchJson('/api/register', {
                     method: 'POST',
                     body: JSON.stringify({ email, password })
                 });
                 alert('Регистрация успешна! Теперь войдите.');
                 window.location.href = 'login.html';
-            } catch (err) {
+            } catch(err) {
                 alert('Ошибка: ' + err.message);
             }
         });
