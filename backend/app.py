@@ -1,17 +1,16 @@
-from flask import Flask, send_from_directory
+from flask import Flask, redirect
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
 
 def create_app():
-    app = Flask(__name__, static_folder='frontend', static_url_path='')
+    # static_folder='frontend' — Flask сам раздаст все файлы из этой папки
+    app = Flask(__name__, static_folder='frontend')
     app.config.from_object(Config)
     JWTManager(app)
 
-    # Регистрируем закрытие соединения с БД после запроса
     app.teardown_appcontext(close_db)
 
-    # Импортируем маршруты (роуты)
     from backend.auth import register, login
     from backend.api import (
         get_muscle_groups, get_exercises, get_exercise,
@@ -29,15 +28,12 @@ def create_app():
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
 
+    # Редирект с корня на index.html
     @app.route('/')
     def index():
-        return send_from_directory('frontend', 'index.html')
+        return redirect('/index.html')
 
-    @app.route('/<path:path>')
-    def static_files(path):
-        return send_from_directory('frontend', path)
-
-    # Диагностический маршрут (можно удалить после проверки)
+    # Диагностический маршрут (можно удалить позже)
     @app.route('/check')
     def check():
         import os
@@ -49,9 +45,7 @@ def create_app():
 
     return app
 
-# Создаём объект для Gunicorn
 application = create_app()
 
-# Инициализируем базу данных (создаём таблицы, если их нет)
 with application.app_context():
     init_db()
