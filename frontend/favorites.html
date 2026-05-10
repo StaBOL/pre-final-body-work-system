@@ -40,7 +40,7 @@
                     <img src="${ex.photo_url}" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                     <div class="card-body">
                         <h3>${ex.name}</h3>
-                        <span class="difficulty">${ex.difficulty}</span>
+                        <span class="difficulty ${ex.difficulty}">${ex.difficulty}</span>
                         <p>${ex.description || ''}</p>
                         <a href="exercise.html?id=${ex.id}">Подробнее →</a>
                         <button onclick="removeFromFav(${ex.id})" style="background:#c0392b;">🗑️ Удалить</button>
