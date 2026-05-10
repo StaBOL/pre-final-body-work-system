@@ -5,18 +5,20 @@ from backend.db import close_db, init_db
 import os
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='frontend', static_url_path='')
     app.config.from_object(Config)
     JWTManager(app)
 
+    # Регистрируем закрытие соединения с БД после запроса
     app.teardown_appcontext(close_db)
-    from backend.api import seed_database
-app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
+
+    # Импортируем маршруты (роуты)
     from backend.auth import register, login
     from backend.api import (
         get_muscle_groups, get_exercises, get_exercise,
         create_workout, get_my_workouts, get_workout, log_set, delete_workout
     )
+    from backend.api import seed_database
 
     app.add_url_rule('/api/register', view_func=register, methods=['POST'])
     app.add_url_rule('/api/login', view_func=login, methods=['POST'])
@@ -28,30 +30,29 @@ app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=get_workout, methods=['GET'])
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
-
-    # Абсолютный путь к папке frontend
-    FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend')
+    app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
 
     @app.route('/')
     def index():
-        return send_from_directory(FRONTEND_DIR, 'index.html')
+        return send_from_directory('frontend', 'index.html')
 
     @app.route('/<path:path>')
     def static_files(path):
-        return send_from_directory(FRONTEND_DIR, path)
+        return send_from_directory('frontend', path)
 
     @app.route('/check')
     def check():
         return {
             'cwd': os.getcwd(),
-            'frontend_dir': FRONTEND_DIR,
-            'frontend_exists': os.path.exists(FRONTEND_DIR),
-            'index_exists': os.path.exists(os.path.join(FRONTEND_DIR, 'index.html'))
+            'frontend_exists': os.path.exists('frontend'),
+            'index_exists': os.path.exists('frontend/index.html')
         }
 
     return app
 
+# Создаём объект для Gunicorn
 application = create_app()
 
+# Инициализируем базу данных (создаём таблицы, если их нет)
 with application.app_context():
     init_db()
