@@ -10,7 +10,8 @@ def create_app():
     JWTManager(app)
 
     app.teardown_appcontext(close_db)
-
+    from backend.api import seed_database
+app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
     from backend.auth import register, login
     from backend.api import (
         get_muscle_groups, get_exercises, get_exercise,
