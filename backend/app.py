@@ -1,11 +1,11 @@
-from flask import Flask, redirect
+from flask import Flask, send_from_directory
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
+import os
 
 def create_app():
-    # static_folder='frontend' — Flask сам раздаст все файлы из этой папки
-    app = Flask(__name__, static_folder='frontend')
+    app = Flask(__name__)
     app.config.from_object(Config)
     JWTManager(app)
 
@@ -28,19 +28,24 @@ def create_app():
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
 
-    # Редирект с корня на index.html
+    # Абсолютный путь к папке frontend
+    FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend')
+
     @app.route('/')
     def index():
-        return redirect('/index.html')
+        return send_from_directory(FRONTEND_DIR, 'index.html')
 
-    # Диагностический маршрут (можно удалить позже)
+    @app.route('/<path:path>')
+    def static_files(path):
+        return send_from_directory(FRONTEND_DIR, path)
+
     @app.route('/check')
     def check():
-        import os
         return {
             'cwd': os.getcwd(),
-            'frontend_exists': os.path.exists('frontend'),
-            'index_exists': os.path.exists('frontend/index.html')
+            'frontend_dir': FRONTEND_DIR,
+            'frontend_exists': os.path.exists(FRONTEND_DIR),
+            'index_exists': os.path.exists(os.path.join(FRONTEND_DIR, 'index.html'))
         }
 
     return app
