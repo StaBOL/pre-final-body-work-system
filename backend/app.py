@@ -28,6 +28,7 @@ def create_app():
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=get_workout, methods=['GET'])
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
+    app.add_url_rule('/check-groups', view_func=check_groups, methods=['GET'])
     
     # Маршрут для наполнения базы (только для админа, временно)
     app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
