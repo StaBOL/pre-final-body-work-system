@@ -29,7 +29,7 @@
                 <div style="max-width:800px; margin:auto; background:white; padding:2rem; border-radius:1rem;">
                     <img src="${ex.photo_url}" style="width:100%; border-radius:1rem;">
                     <h2>${ex.name}</h2>
-                    <p><strong>Сложность:</strong> ${ex.difficulty}</p>
+                    <p><strong>Сложность:</strong> <span class="difficulty ${ex.difficulty}">${ex.difficulty}</span></p>
                     <p><strong>Описание:</strong> ${ex.description}</p>
                     <p><strong>Техника:</strong> ${ex.technique || 'Не указана'}</p>
                     <div>
@@ -40,11 +40,8 @@
             `;
         }
         function toggleFav() {
-            if (isFavorite(exerciseId)) {
-                removeFavorite(exerciseId);
-            } else {
-                addFavorite(exerciseId);
-            }
+            if (isFavorite(exerciseId)) removeFavorite(exerciseId);
+            else addFavorite(exerciseId);
             const btn = document.getElementById('favBtn');
             if (btn) btn.innerText = isFavorite(exerciseId) ? '💔 Удалить из избранного' : '❤️ В избранное';
         }
