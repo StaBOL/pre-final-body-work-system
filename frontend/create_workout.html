@@ -54,12 +54,12 @@
         function addExercise(id, name) {
             const sets = document.getElementById('sets').value;
             const reps = document.getElementById('reps').value;
-            selected.push({ exercise_id: parseInt(id), sets: parseInt(sets), reps: parseInt(reps) });
+            selected.push({ exercise_id: parseInt(id), sets: parseInt(sets), reps: parseInt(reps), name: name });
             renderSelected();
         }
         function renderSelected() {
             const container = document.getElementById('selectedExercises');
-            container.innerHTML = selected.map((ex, idx) => `<div>${ex.name || 'упражнение'} — ${ex.sets}х${ex.reps} <button type="button" onclick="removeExercise(${idx})">Удалить</button></div>`).join('');
+            container.innerHTML = selected.map((ex, idx) => `<div>${ex.name} — ${ex.sets}х${ex.reps} <button type="button" onclick="removeExercise(${idx})">Удалить</button></div>`).join('');
         }
         function removeExercise(idx) { selected.splice(idx,1); renderSelected(); }
         document.getElementById('addExerciseBtn').onclick = () => {
