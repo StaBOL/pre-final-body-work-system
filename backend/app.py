@@ -1,12 +1,11 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, redirect
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
 import os
 
 def create_app():
-    # static_folder указывает на папку frontend, static_url_path='' — чтобы файлы были в корне
-    app = Flask(__name__, static_folder='frontend', static_url_path='')
+    app = Flask(__name__, static_folder='frontend')
     app.config.from_object(Config)
     JWTManager(app)
 
@@ -29,15 +28,21 @@ def create_app():
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
 
-    # Главная страница — отдаём index.html
     @app.route('/')
     def index():
-        return send_from_directory('frontend', 'index.html')
+        return redirect('/index.html')
 
-    # Все остальные статические файлы (включая style.css, app.js, другие HTML)
     @app.route('/<path:path>')
     def static_files(path):
         return send_from_directory('frontend', path)
+
+    @app.route('/check')
+    def check():
+        return {
+            'cwd': os.getcwd(),
+            'frontend_exists': os.path.exists('frontend'),
+            'index_exists': os.path.exists('frontend/index.html')
+        }
 
     return app
 
