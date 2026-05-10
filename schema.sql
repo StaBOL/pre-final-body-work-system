@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS workout_log (
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Индексы (опционально)
+-- Индексы
 CREATE INDEX IF NOT EXISTS idx_exercise_muscle ON exercise(muscle_group_id);
 CREATE INDEX IF NOT EXISTS idx_workout_user ON workout(user_id);
 CREATE INDEX IF NOT EXISTS idx_workoutex_workout ON workout_exercise(workout_id);
