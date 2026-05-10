@@ -5,7 +5,8 @@ from backend.db import close_db, init_db
 import os
 
 def create_app():
-    app = Flask(__name__, static_folder='frontend')
+    # Убираем static_folder, он нам сейчас не нужен
+    app = Flask(__name__)
     app.config.from_object(Config)
     JWTManager(app)
 
@@ -28,22 +29,19 @@ def create_app():
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
 
+    # Самый простой и надежный маршрут для корня
     @app.route('/')
     def index():
-        return send_from_directory('frontend', 'index.html')
+        # Указываем абсолютный путь к папке frontend
+        frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend')
+        return send_from_directory(frontend_dir, 'index.html')
 
+    # Универсальный маршрут для всех остальных файлов
     @app.route('/<path:path>')
     def static_files(path):
-        return send_from_directory('frontend', path)
-
-    # Временный маршрут для создания тестового index.html
-    @app.route('/create-index')
-    def create_index():
-        os.makedirs('frontend', exist_ok=True)
-        test_html = '<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Hello from Render!</h1><p>If you see this, static files work.</p></body></html>'
-        with open('frontend/index.html', 'w', encoding='utf-8') as f:
-            f.write(test_html)
-        return 'Index file created. Now visit /index.html'
+        print(f"Requested path: {path}")  # Это сообщение появится в логах Render
+        frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend')
+        return send_from_directory(frontend_dir, path)
 
     return app
 
