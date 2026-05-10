@@ -4,17 +4,6 @@ from backend.config import Config
 from backend.db import close_db, init_db
 
 def create_app():
-        @app.route('/create-index')
-    def create_index():
-        import os
-        os.makedirs('frontend', exist_ok=True)
-        with open('frontend/index.html', 'w', encoding='utf-8') as f:
-            f.write('''<!DOCTYPE html>
-<html>
-<head><title>Test</title></head>
-<body><h1>Hello, Render!</h1></body>
-</html>''')
-        return "Index created"
     app = Flask(__name__, static_folder='frontend')
     app.config.from_object(Config)
     JWTManager(app)
