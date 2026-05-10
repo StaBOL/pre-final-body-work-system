@@ -1,21 +1,9 @@
-from flask import Flask, send_from_directory, redirect
+from flask import Flask, send_from_directory
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
-import os
 
 def create_app():
-    @app.route('/create-index')
-def create_index():
-    import os
-    os.makedirs('frontend', exist_ok=True)
-    with open('frontend/index.html', 'w', encoding='utf-8') as f:
-        f.write('''<!DOCTYPE html>
-<html>
-<head><title>Test</title></head>
-<body><h1>Hello, Render!</h1><p>If you see this, the server works.</p></body>
-</html>''')
-    return "Index created"
     app = Flask(__name__, static_folder='frontend')
     app.config.from_object(Config)
     JWTManager(app)
@@ -41,19 +29,11 @@ def create_index():
 
     @app.route('/')
     def index():
-        return redirect('/index.html')
+        return send_from_directory('frontend', 'index.html')
 
     @app.route('/<path:path>')
     def static_files(path):
         return send_from_directory('frontend', path)
-
-    @app.route('/check')
-    def check():
-        return {
-            'cwd': os.getcwd(),
-            'frontend_exists': os.path.exists('frontend'),
-            'index_exists': os.path.exists('frontend/index.html')
-        }
 
     return app
 
