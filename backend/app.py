@@ -28,7 +28,8 @@ def create_app():
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=get_workout, methods=['GET'])
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
-
+    from backend.api import seed_database
+app.add_url_rule('/seed', view_func=seed_database, methods=['GET'])
     # Самый простой и надежный маршрут для корня
     @app.route('/')
     def index():
