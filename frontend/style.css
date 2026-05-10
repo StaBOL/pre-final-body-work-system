@@ -5,33 +5,46 @@
 }
 
 body {
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    background: #f5f7fa;
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
     color: #1e2a3e;
+    min-height: 100vh;
 }
 
 header {
-    background: #0b2b40;
+    background: linear-gradient(135deg, #0b2b40 0%, #144d5c 100%);
     color: white;
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-bottom: 3px solid #ffb347;
 }
 
-nav a, nav button {
+header h1 {
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+}
+
+nav a, nav button, nav span a {
     color: white;
-    margin-left: 1rem;
+    margin-left: 1.2rem;
     text-decoration: none;
     background: none;
     border: none;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    padding: 0.3rem 0;
+    border-bottom: 2px solid transparent;
 }
 
-nav a:hover, nav button:hover {
-    text-decoration: underline;
+nav a:hover, nav button:hover, nav span a:hover {
+    border-bottom-color: #ffb347;
+    color: #ffb347;
 }
 
 main {
@@ -39,24 +52,34 @@ main {
     padding: 2rem;
     gap: 2rem;
     flex-wrap: wrap;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-/* ----- Боковая панель "Группы мышц" (тёмная) ----- */
+/* Боковая панель групп мышц */
 #filters {
     background: #1e2a3a;
     border-radius: 1rem;
-    padding: 1rem;
+    padding: 1.2rem;
     width: 260px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     flex-shrink: 0;
+    backdrop-filter: blur(4px);
 }
 
 #filters h3 {
-    color: #ffffff;
+    color: #ffb347;
     margin-bottom: 1rem;
     font-size: 1.2rem;
-    border-bottom: 2px solid #2c3e50;
+    border-bottom: 2px solid #ffb347;
     padding-bottom: 0.5rem;
+    text-align: center;
+}
+
+#muscleList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 #muscleList button {
@@ -64,7 +87,6 @@ main {
     width: 100%;
     text-align: left;
     padding: 0.6rem 1rem;
-    margin: 0.3rem 0;
     background: #2c3e50;
     border: none;
     border-radius: 0.5rem;
@@ -72,68 +94,49 @@ main {
     font-weight: 500;
     color: #ecf0f1;
     transition: all 0.2s ease;
+    font-size: 0.9rem;
 }
 
 #muscleList button:hover {
     background: #34495e;
-    color: white;
+    transform: translateX(5px);
 }
 
 #muscleList button.active {
-    background: #0b5e7e;
-    color: white;
-    box-shadow: 0 0 0 2px rgba(11,94,126,0.4);
+    background: #ffb347;
+    color: #1e2a3a;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(255,179,71,0.4);
 }
 
-/* ----- Сетка карточек: ГОРИЗОНТАЛЬНО, принудительно 4 колонки на больших экранах ----- */
+/* Сетка карточек упражнений */
 #exercisesList {
     flex: 1;
-    min-width: 0; /* чтобы не переполнять */
+    min-width: 0;
 }
 
 #cardsContainer {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);  /* 4 колонки одинаковой ширины */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.8rem;
-    align-items: stretch;
+    margin-top: 1rem;
 }
 
-/* Если экран меньше 1200px - 3 колонки */
-@media (max-width: 1200px) {
-    #cardsContainer {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* Если экран меньше 900px - 2 колонки */
-@media (max-width: 900px) {
-    #cardsContainer {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Если экран меньше 600px - 1 колонка */
-@media (max-width: 600px) {
-    #cardsContainer {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Каждая карточка */
 .exercise-card {
     background: white;
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
     display: flex;
     flex-direction: column;
     height: 100%;
+    cursor: pointer;
 }
 
 .exercise-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 24px rgba(0,0,0,0.12);
 }
 
 .exercise-card img {
@@ -141,6 +144,11 @@ main {
     height: 180px;
     object-fit: cover;
     background: #eef2f5;
+    transition: transform 0.3s ease;
+}
+
+.exercise-card:hover img {
+    transform: scale(1.02);
 }
 
 .card-body {
@@ -154,10 +162,11 @@ main {
     font-size: 1.25rem;
     margin-bottom: 0.3rem;
     color: #1e2a3a;
+    font-weight: 600;
 }
 
 .difficulty {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     background: #e9ecef;
     display: inline-block;
     padding: 0.2rem 0.8rem;
@@ -165,10 +174,15 @@ main {
     margin: 0.5rem 0;
     text-transform: capitalize;
     width: fit-content;
+    font-weight: bold;
 }
 
+.difficulty[data-diff="easy"] { background: #d4edda; color: #155724; }
+.difficulty[data-diff="medium"] { background: #fff3cd; color: #856404; }
+.difficulty[data-diff="hard"] { background: #f8d7da; color: #721c24; }
+
 .card-body p {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #4a627a;
     margin: 0.5rem 0;
     line-height: 1.4;
@@ -181,20 +195,15 @@ main {
     font-weight: 600;
     margin-top: 0.5rem;
     display: inline-block;
+    transition: color 0.2s;
 }
 
 .card-body a:hover {
+    color: #ffb347;
     text-decoration: underline;
 }
 
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.8rem;
-    flex: 1;
-}
-
-button, .fav-btn {
+.fav-btn {
     background: #0b5e7e;
     color: white;
     border: none;
@@ -202,42 +211,93 @@ button, .fav-btn {
     border-radius: 2rem;
     cursor: pointer;
     font-size: 0.85rem;
-    margin-top: 0.5rem;
-    transition: background 0.2s;
+    margin-top: 0.8rem;
+    transition: background 0.2s, transform 0.1s;
 }
 
-button:hover, .fav-btn:hover {
-    background: #0a4c66;
+.fav-btn:hover {
+    background: #ffb347;
+    transform: scale(1.02);
 }
 
-button.danger {
-    background: #c0392b;
+/* Формы */
+form {
+    background: white;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    max-width: 450px;
+    margin: 0 auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
-button.danger:hover {
-    background: #a93226;
+form h2, form h3 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #144d5c;
 }
 
+input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 0.5rem 0 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    transition: border 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #ffb347;
+    box-shadow: 0 0 0 2px rgba(255,179,71,0.2);
+}
+
+button, .btn {
+    background: #144d5c;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background 0.2s, transform 0.1s;
+}
+
+button:hover, .btn:hover {
+    background: #ffb347;
+    transform: translateY(-1px);
+}
+
+/* Карточки тренировок */
 .workout-item {
     background: white;
     border-radius: 1rem;
     padding: 1.2rem;
     margin-bottom: 1rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-left: 5px solid #ffb347;
 }
 
-form {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-input, select, textarea {
-    width: 100%;
-    padding: 0.6rem;
-    margin: 0.5rem 0 1rem;
-    border: 1px solid #ccc;
-    border-radius: 0.5rem;
+/* Адаптивность */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    #filters {
+        width: 100%;
+    }
+    header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    nav a, nav button, nav span a {
+        margin: 0 0.5rem;
+    }
+    #cardsContainer {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
 }
