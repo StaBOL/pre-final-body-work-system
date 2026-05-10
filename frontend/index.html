@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тренировки | Главная</title>
     <link rel="stylesheet" href="style.css?v=3">
-    <style>
-    /* Скопируйте сюда несколько ключевых правил, например для карточек */
-    .exercise-card { background: #fff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-    .exercise-card:hover { transform: translateY(-8px); }
-</style>
 </head>
 <body>
     <header>
@@ -41,13 +36,11 @@
             const container = document.getElementById('muscleList');
             if (!container) return;
             container.innerHTML = '';
-            // Кнопка "Все"
             const allBtn = document.createElement('button');
             allBtn.textContent = 'Все';
             allBtn.dataset.id = 'all';
             allBtn.onclick = () => filterExercises('all');
             container.appendChild(allBtn);
-            // Кнопки групп
             groups.forEach(g => {
                 const btn = document.createElement('button');
                 btn.textContent = g.name;
@@ -70,12 +63,11 @@
             currentMuscle = muscleId;
             const url = muscleId === 'all' ? '/api/exercises' : `/api/exercises?muscle=${muscleId}`;
             const exercises = await fetchJson(url);
-            // Сортируем по id, чтобы порядок был стабильным
             exercises.sort((a,b) => a.id - b.id);
             const container = document.getElementById('cardsContainer');
             if (!container) return;
             if (exercises.length === 0) {
-                container.innerHTML = '<p>Нет упражнений в этой группе.</p>';
+                container.innerHTML = '<p style="grid-column:1/-1;">Нет упражнений в этой группе.</p>';
                 highlightActive();
                 return;
             }
@@ -84,7 +76,7 @@
                     <img src="${ex.photo_url}" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                     <div class="card-body">
                         <h3>${ex.name}</h3>
-                        <span class="difficulty">${ex.difficulty}</span>
+                        <span class="difficulty ${ex.difficulty}">${ex.difficulty}</span>
                         <p>${ex.description || ''}</p>
                         <a href="exercise.html?id=${ex.id}">Подробнее →</a>
                         <button onclick="toggleFavorite(${ex.id})" class="fav-btn">
@@ -97,12 +89,8 @@
         }
 
         function toggleFavorite(exId) {
-            if (isFavorite(exId)) {
-                removeFavorite(exId);
-            } else {
-                addFavorite(exId);
-            }
-            // перерисовываем текущий список, чтобы кнопка обновилась
+            if (isFavorite(exId)) removeFavorite(exId);
+            else addFavorite(exId);
             filterExercises(currentMuscle);
         }
 
