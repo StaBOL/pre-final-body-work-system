@@ -1,11 +1,12 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
 import os
 
 def create_app():
-    app = Flask(__name__)
+    # static_folder указывает на папку frontend, static_url_path='' — чтобы файлы были в корне
+    app = Flask(__name__, static_folder='frontend', static_url_path='')
     app.config.from_object(Config)
     JWTManager(app)
 
@@ -28,40 +29,15 @@ def create_app():
     app.add_url_rule('/api/workout-exercises/<int:workout_exercise_id>/log', view_func=log_set, methods=['POST'])
     app.add_url_rule('/api/workouts/<int:workout_id>', view_func=delete_workout, methods=['DELETE'])
 
-    # Главная страница – читаем index.html напрямую
+    # Главная страница — отдаём index.html
     @app.route('/')
     def index():
-        index_path = os.path.join('frontend', 'index.html')
-        if not os.path.exists(index_path):
-            return f"File not found: {index_path}", 404
-        with open(index_path, 'r', encoding='utf-8') as f:
-            return f.read()
+        return send_from_directory('frontend', 'index.html')
 
-    # Все остальные статические файлы (CSS, JS, другие HTML)
+    # Все остальные статические файлы (включая style.css, app.js, другие HTML)
     @app.route('/<path:path>')
     def static_files(path):
-        file_path = os.path.join('frontend', path)
-        if not os.path.exists(file_path):
-            return f"File not found: {file_path}", 404
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return f.read()
-
-    # Диагностика
-    @app.route('/check')
-    def check():
-        return {
-            'cwd': os.getcwd(),
-            'frontend_exists': os.path.exists('frontend'),
-            'index_exists': os.path.exists(os.path.join('frontend', 'index.html'))
-        }
-
-    @app.route('/ls-frontend')
-    def ls_frontend():
-        try:
-            files = os.listdir('frontend') if os.path.exists('frontend') else []
-            return {'files': files}
-        except Exception as e:
-            return {'error': str(e)}, 500
+        return send_from_directory('frontend', path)
 
     return app
 
