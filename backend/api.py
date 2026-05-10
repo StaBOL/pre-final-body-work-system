@@ -100,13 +100,14 @@ def delete_workout(workout_id):
 
 def seed_database():
     import psycopg
+    from werkzeug.security import generate_password_hash
     from backend.config import Config
     conn = psycopg.connect(Config.SQLALCHEMY_DATABASE_URI)
     cur = conn.cursor()
     
-    # Группы мышц (если пусто)
+    # Группы мышц
     groups = [
-        ('Грудные', 'Упражнения для груди', 'https://picsum.photos/id/100/400/300'),
+        ('Грудные', 'Упражнения для грудных', 'https://picsum.photos/id/100/400/300'),
         ('Спина', 'Упражнения для спины', 'https://picsum.photos/id/101/400/300'),
         ('Ноги', 'Упражнения для ног', 'https://picsum.photos/id/102/400/300'),
         ('Плечи', 'Упражнения для плеч', 'https://picsum.photos/id/103/400/300'),
@@ -115,55 +116,42 @@ def seed_database():
         ('Пресс', 'Упражнения для пресса', 'https://picsum.photos/id/106/400/300'),
         ('Ягодицы', 'Упражнения для ягодиц', 'https://picsum.photos/id/107/400/300'),
     ]
-    for g in groups:
-        cur.execute("INSERT INTO muscle_group (name, description, photo_url) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING", g)
+    for name, desc, url in groups:
+        cur.execute("""
+            INSERT INTO muscle_group (name, description, photo_url)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (name) DO NOTHING
+        """, (name, desc, url))
+    conn.commit()  # <--- ЭТО ВАЖНО: фиксируем группы
     
     # Упражнения
     exercises = [
-        ('Жим штанги лёжа', 'Базовое упражнение для грудных', 'Лёжа на скамье, опускайте гриф к груди, выжимайте вверх.', 'medium', 'https://picsum.photos/id/1/400/300', 1),
-        ('Отжимания на брусьях', 'Работает низ груди и трицепс', 'Наклон корпуса вперёд для акцента на грудь.', 'hard', 'https://picsum.photos/id/3/400/300', 1),
-        ('Тяга штанги в наклоне', 'Развитие широчайших', 'Наклон 45°, тяните к поясу.', 'medium', 'https://picsum.photos/id/6/400/300', 2),
-        ('Подтягивания', 'Классика спины', 'Широкий хват к груди.', 'hard', 'https://picsum.photos/id/10/400/300', 2),
-        ('Приседания со штангой', 'Основа для ног', 'Спина прямая, колени не выходят за носки.', 'medium', 'https://picsum.photos/id/12/400/300', 3),
-        ('Выпады с гантелями', 'Ягодицы и квадрицепс', 'Шаг вперёд, следите за коленом.', 'medium', 'https://picsum.photos/id/16/400/300', 3),
-        ('Жим штанги сидя', 'Передние дельты', 'Опускайте гриф к ключицам.', 'medium', 'https://picsum.photos/id/18/400/300', 4),
-        ('Разведение гантелей в стороны', 'Средняя дельта', 'Лёгкий вес, локти чуть согнуты.', 'easy', 'https://picsum.photos/id/20/400/300', 4),
-        ('Подъём штанги на бицепс', 'Изоляция бицепса', 'Локти прижаты, не раскачивайтесь.', 'easy', 'https://picsum.photos/id/23/400/300', 5),
-        ('Французский жим лёжа', 'Трицепс', 'Штанга за головой, опускайте ко лбу.', 'medium', 'https://picsum.photos/id/28/400/300', 6),
-        ('Скручивания на полу', 'Верхний пресс', 'Поясница прижата, скручивайте корпус.', 'easy', 'https://picsum.photos/id/33/400/300', 7),
-        ('Планка', 'Статика кора', 'Держите тело ровно.', 'easy', 'https://picsum.photos/id/36/400/300', 7),
-        ('Ягодичный мост', 'Начальный уровень', 'Поднимайте таз вверх, сжимая ягодицы.', 'easy', 'https://picsum.photos/id/38/400/300', 8),
+        ('Жим штанги лёжа', 'Грудь', 'Техника...', 'medium', 'https://picsum.photos/id/1/400/300', 1),
+        ('Тяга штанги в наклоне', 'Спина', 'Техника...', 'medium', 'https://picsum.photos/id/6/400/300', 2),
+        ('Приседания', 'Ноги', 'Техника...', 'medium', 'https://picsum.photos/id/12/400/300', 3),
+        ('Жим гантелей сидя', 'Плечи', 'Техника...', 'medium', 'https://picsum.photos/id/19/400/300', 4),
+        ('Подъём штанги на бицепс', 'Бицепс', 'Техника...', 'easy', 'https://picsum.photos/id/23/400/300', 5),
+        ('Французский жим', 'Трицепс', 'Техника...', 'medium', 'https://picsum.photos/id/28/400/300', 6),
+        ('Скручивания', 'Пресс', 'Техника...', 'easy', 'https://picsum.photos/id/33/400/300', 7),
+        ('Ягодичный мост', 'Ягодицы', 'Техника...', 'easy', 'https://picsum.photos/id/38/400/300', 8),
     ]
     for ex in exercises:
-        cur.execute("""INSERT INTO exercise (name, description, technique, difficulty, photo_url, muscle_group_id)
-                      VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""", ex)
+        cur.execute("""
+            INSERT INTO exercise (name, description, technique, difficulty, photo_url, muscle_group_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+        """, ex)
     
     # Тестовый пользователь
     hashed = generate_password_hash('student')
-    cur.execute("INSERT INTO \"user\" (email, password, role) VALUES (%s, %s, %s) ON CONFLICT (email) DO NOTHING",
-                ('student@example.com', hashed, 'student'))
-    
-    # Базовые тренировки (пример) – для пользователя student
-    user_id = cur.execute("SELECT id FROM \"user\" WHERE email = 'student@example.com'").fetchone()
-    if user_id:
-        user_id = user_id[0]
-        # Тренировка "Грудь+трицепс"
-        cur.execute("INSERT INTO workout (name, user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", ('Грудь + трицепс', user_id))
-        workout_id = cur.execute("SELECT id FROM workout WHERE name = 'Грудь + трицепс' AND user_id = %s", (user_id,)).fetchone()
-        if workout_id:
-            workout_id = workout_id[0]
-            # Получаем id упражнений
-            cur.execute("SELECT id FROM exercise WHERE name = 'Жим штанги лёжа'")
-            ex1 = cur.fetchone()
-            cur.execute("SELECT id FROM exercise WHERE name = 'Отжимания на брусьях'")
-            ex2 = cur.fetchone()
-            cur.execute("SELECT id FROM exercise WHERE name = 'Французский жим лёжа'")
-            ex3 = cur.fetchone()
-            if ex1: cur.execute("INSERT INTO workout_exercise (workout_id, exercise_id, sets, reps, \"order\") VALUES (%s, %s, 4, 10, 1)", (workout_id, ex1[0]))
-            if ex2: cur.execute("INSERT INTO workout_exercise (workout_id, exercise_id, sets, reps, \"order\") VALUES (%s, %s, 3, 12, 2)", (workout_id, ex2[0]))
-            if ex3: cur.execute("INSERT INTO workout_exercise (workout_id, exercise_id, sets, reps, \"order\") VALUES (%s, %s, 3, 12, 3)", (workout_id, ex3[0]))
+    cur.execute("""
+        INSERT INTO "user" (email, password, role)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (email) DO NOTHING
+    """, ('student@example.com', hashed, 'student'))
     
     conn.commit()
     cur.close()
     conn.close()
-    return {"message": "Database seeded with exercises and sample workout"}
+    
+    return {"message": "Database seeded successfully!"}
