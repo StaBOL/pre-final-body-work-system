@@ -37,6 +37,16 @@ def create_app():
     def static_files(path):
         return send_from_directory('frontend', path)
 
+    # Диагностический маршрут (можно удалить после проверки)
+    @app.route('/check')
+    def check():
+        import os
+        return {
+            'cwd': os.getcwd(),
+            'frontend_exists': os.path.exists('frontend'),
+            'index_exists': os.path.exists('frontend/index.html')
+        }
+
     return app
 
 # Создаём объект для Gunicorn
@@ -45,8 +55,3 @@ application = create_app()
 # Инициализируем базу данных (создаём таблицы, если их нет)
 with application.app_context():
     init_db()
-@app.route('/check')
-def check():
-    import os
-    files = os.listdir('.')
-    return {'cwd': os.getcwd(), 'files': files}
