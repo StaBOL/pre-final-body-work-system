@@ -6,6 +6,11 @@ def get_muscle_groups():
     rows = query_all('SELECT id, name, photo_url FROM muscle_group')
     return jsonify([dict(row) for row in rows])
 
+def check_groups():
+    from backend.db import query_all
+    rows = query_all('SELECT * FROM muscle_group')
+    return {'count': len(rows), 'rows': rows}
+
 def get_exercises():
     muscle_id = request.args.get('muscle', type=int)
     if muscle_id:
