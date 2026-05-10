@@ -1,7 +1,7 @@
 import os
 import psycopg
 from flask import g
-from backend.config import Config, BASE_DIR   # <-- добавили BASE_DIR
+from backend.config import Config, BASE_DIR
 
 def get_db():
     if 'db' not in g:
@@ -17,13 +17,20 @@ def query_one(sql, params=()):
     with get_db().cursor() as cur:
         cur.execute(sql, params)
         row = cur.fetchone()
-    return row
+    if row:
+        # Преобразуем кортеж в словарь с именами колонок
+        colnames = [desc[0] for desc in cur.description]
+        return dict(zip(colnames, row))
+    return None
 
 def query_all(sql, params=()):
     with get_db().cursor() as cur:
         cur.execute(sql, params)
         rows = cur.fetchall()
-    return rows
+        if not rows:
+            return []
+        colnames = [desc[0] for desc in cur.description]
+        return [dict(zip(colnames, row)) for row in rows]
 
 def execute(sql, params=()):
     conn = get_db()
@@ -36,7 +43,6 @@ def execute(sql, params=()):
             return None
 
 def init_db():
-    """Создаёт таблицы, если их нет, используя schema.sql."""
     conn = get_db()
     schema_path = os.path.join(BASE_DIR, 'schema.sql')
     if not os.path.exists(schema_path):
