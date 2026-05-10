@@ -110,53 +110,52 @@ def seed_database():
     conn = psycopg.connect(Config.SQLALCHEMY_DATABASE_URI)
     cur = conn.cursor()
     
-    # Группы мышц
+    # Очистим таблицы (для чистоты эксперимента)
+    cur.execute("DELETE FROM workout_log")
+    cur.execute("DELETE FROM workout_exercise")
+    cur.execute("DELETE FROM workout")
+    cur.execute("DELETE FROM exercise")
+    cur.execute("DELETE FROM muscle_group")
+    conn.commit()
+    
+    # Вставляем группы
     groups = [
-        ('Грудные', 'Упражнения для грудных', 'https://picsum.photos/id/100/400/300'),
-        ('Спина', 'Упражнения для спины', 'https://picsum.photos/id/101/400/300'),
-        ('Ноги', 'Упражнения для ног', 'https://picsum.photos/id/102/400/300'),
-        ('Плечи', 'Упражнения для плеч', 'https://picsum.photos/id/103/400/300'),
-        ('Бицепс', 'Упражнения для бицепса', 'https://picsum.photos/id/104/400/300'),
-        ('Трицепс', 'Упражнения для трицепса', 'https://picsum.photos/id/105/400/300'),
-        ('Пресс', 'Упражнения для пресса', 'https://picsum.photos/id/106/400/300'),
-        ('Ягодицы', 'Упражнения для ягодиц', 'https://picsum.photos/id/107/400/300'),
+        (1, 'Грудные', 'Упражнения для грудных', 'https://picsum.photos/id/100/400/300'),
+        (2, 'Спина', 'Упражнения для спины', 'https://picsum.photos/id/101/400/300'),
+        (3, 'Ноги', 'Упражнения для ног', 'https://picsum.photos/id/102/400/300'),
+        (4, 'Плечи', 'Упражнения для плеч', 'https://picsum.photos/id/103/400/300'),
+        (5, 'Бицепс', 'Упражнения для бицепса', 'https://picsum.photos/id/104/400/300'),
+        (6, 'Трицепс', 'Упражнения для трицепса', 'https://picsum.photos/id/105/400/300'),
+        (7, 'Пресс', 'Упражнения для пресса', 'https://picsum.photos/id/106/400/300'),
+        (8, 'Ягодицы', 'Упражнения для ягодиц', 'https://picsum.photos/id/107/400/300'),
     ]
-    for name, desc, url in groups:
-        cur.execute("""
-            INSERT INTO muscle_group (name, description, photo_url)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (name) DO NOTHING
-        """, (name, desc, url))
-    conn.commit()  # <--- ЭТО ВАЖНО: фиксируем группы
+    for g in groups:
+        cur.execute("INSERT INTO muscle_group (id, name, description, photo_url) VALUES (%s, %s, %s, %s)", g)
+    conn.commit()
     
     # Упражнения
     exercises = [
-        ('Жим штанги лёжа', 'Грудь', 'Техника...', 'medium', 'https://picsum.photos/id/1/400/300', 1),
-        ('Тяга штанги в наклоне', 'Спина', 'Техника...', 'medium', 'https://picsum.photos/id/6/400/300', 2),
-        ('Приседания', 'Ноги', 'Техника...', 'medium', 'https://picsum.photos/id/12/400/300', 3),
-        ('Жим гантелей сидя', 'Плечи', 'Техника...', 'medium', 'https://picsum.photos/id/19/400/300', 4),
-        ('Подъём штанги на бицепс', 'Бицепс', 'Техника...', 'easy', 'https://picsum.photos/id/23/400/300', 5),
-        ('Французский жим', 'Трицепс', 'Техника...', 'medium', 'https://picsum.photos/id/28/400/300', 6),
-        ('Скручивания', 'Пресс', 'Техника...', 'easy', 'https://picsum.photos/id/33/400/300', 7),
-        ('Ягодичный мост', 'Ягодицы', 'Техника...', 'easy', 'https://picsum.photos/id/38/400/300', 8),
+        (1, 'Жим штанги лёжа', 'Грудь', 'Техника...', 'medium', 'https://picsum.photos/id/1/400/300', 1),
+        (2, 'Тяга штанги в наклоне', 'Спина', 'Техника...', 'medium', 'https://picsum.photos/id/6/400/300', 2),
+        (3, 'Приседания', 'Ноги', 'Техника...', 'medium', 'https://picsum.photos/id/12/400/300', 3),
+        (4, 'Жим гантелей сидя', 'Плечи', 'Техника...', 'medium', 'https://picsum.photos/id/19/400/300', 4),
+        (5, 'Подъём штанги на бицепс', 'Бицепс', 'Техника...', 'easy', 'https://picsum.photos/id/23/400/300', 5),
+        (6, 'Французский жим', 'Трицепс', 'Техника...', 'medium', 'https://picsum.photos/id/28/400/300', 6),
+        (7, 'Скручивания', 'Пресс', 'Техника...', 'easy', 'https://picsum.photos/id/33/400/300', 7),
+        (8, 'Ягодичный мост', 'Ягодицы', 'Техника...', 'easy', 'https://picsum.photos/id/38/400/300', 8),
     ]
     for ex in exercises:
         cur.execute("""
-            INSERT INTO exercise (name, description, technique, difficulty, photo_url, muscle_group_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING
+            INSERT INTO exercise (id, name, description, technique, difficulty, photo_url, muscle_group_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, ex)
+    conn.commit()
     
     # Тестовый пользователь
     hashed = generate_password_hash('student')
-    cur.execute("""
-        INSERT INTO "user" (email, password, role)
-        VALUES (%s, %s, %s)
-        ON CONFLICT (email) DO NOTHING
-    """, ('student@example.com', hashed, 'student'))
-    
+    cur.execute("INSERT INTO \"user\" (email, password, role) VALUES (%s, %s, %s) ON CONFLICT (email) DO NOTHING", ('student@example.com', hashed, 'student'))
     conn.commit()
+    
     cur.close()
     conn.close()
-    
     return {"message": "Database seeded successfully!"}
