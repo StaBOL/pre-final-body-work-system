@@ -45,3 +45,8 @@ application = create_app()
 # Инициализируем базу данных (создаём таблицы, если их нет)
 with application.app_context():
     init_db()
+@app.route('/check')
+def check():
+    import os
+    files = os.listdir('.')
+    return {'cwd': os.getcwd(), 'files': files}
