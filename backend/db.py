@@ -17,11 +17,10 @@ def query_one(sql, params=()):
     with get_db().cursor() as cur:
         cur.execute(sql, params)
         row = cur.fetchone()
-    if row:
-        # Преобразуем кортеж в словарь с именами колонок
-        colnames = [desc[0] for desc in cur.description]
-        return dict(zip(colnames, row))
-    return None
+        if row:
+            colnames = [desc[0] for desc in cur.description]
+            return dict(zip(colnames, row))
+        return None
 
 def query_all(sql, params=()):
     with get_db().cursor() as cur:
