@@ -96,3 +96,63 @@ def delete_workout(workout_id):
         return jsonify({'msg': 'Workout not found or unauthorized'}), 404
     execute('DELETE FROM workout WHERE id = ?', (workout_id,))
     return jsonify({'msg': 'Workout deleted'}), 200
+    from werkzeug.security import generate_password_hash
+
+def seed_database():
+    """Временный маршрут для наполнения базы данных упражнениями и тестовым пользователем"""
+    import psycopg
+    from backend.config import Config
+    
+    conn = psycopg.connect(Config.SQLALCHEMY_DATABASE_URI)
+    cur = conn.cursor()
+    
+    # Группы мышц
+    groups = [
+        ('Грудные', 'Упражнения для развития грудных мышц', 'https://picsum.photos/id/100/400/300'),
+        ('Спина', 'Тренировка широчайших и трапеций', 'https://picsum.photos/id/101/400/300'),
+        ('Ноги', 'Квадрицепсы, бицепс бедра, ягодицы', 'https://picsum.photos/id/102/400/300'),
+        ('Плечи', 'Дельтовидные мышцы', 'https://picsum.photos/id/103/400/300'),
+        ('Бицепс', 'Сгибатели рук', 'https://picsum.photos/id/104/400/300'),
+        ('Трицепс', 'Разгибатели рук', 'https://picsum.photos/id/105/400/300'),
+        ('Пресс', 'Мышцы кора', 'https://picsum.photos/id/106/400/300'),
+        ('Ягодицы', 'Укрепление ягодичных', 'https://picsum.photos/id/107/400/300'),
+    ]
+    for name, desc, url in groups:
+        cur.execute("""
+            INSERT INTO muscle_group (name, description, photo_url)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (name) DO NOTHING
+        """, (name, desc, url))
+    
+    # Упражнения (сокращённый список для примера, вы можете добавить все 41)
+    exercises = [
+        ('Жим штанги лёжа', 'Базовое упражнение для массы груди', 'Лягте на скамью, гриф на уровне глаз. Опускайте до груди, выжимайте вверх.', 'medium', 'https://picsum.photos/id/1/400/300', 1),
+        ('Жим гантелей лёжа', 'Лучшая амплитуда', 'Гантели опускайте глубже, чем штангу.', 'medium', 'https://picsum.photos/id/2/400/300', 1),
+        ('Тяга штанги в наклоне', 'Ширина спины', 'Наклон 45°, тяните к низу живота.', 'medium', 'https://picsum.photos/id/6/400/300', 2),
+        ('Приседания со штангой', 'Основное для ног', 'Держите спину прямой, не округляйте поясницу.', 'medium', 'https://picsum.photos/id/12/400/300', 3),
+        ('Жим штанги сидя', 'Передние дельты', 'Опускайте гриф к ключицам, не разводите локти.', 'medium', 'https://picsum.photos/id/18/400/300', 4),
+        ('Подъём штанги на бицепс', 'Брахиалис и бицепс', 'Локти прижаты, не раскачивайтесь.', 'easy', 'https://picsum.photos/id/23/400/300', 5),
+        ('Французский жим сидя', 'Длинная головка', 'Штанга за головой, опускайте ко лбу.', 'medium', 'https://picsum.photos/id/28/400/300', 6),
+        ('Скручивания на полу', 'Верхний пресс', 'Поясница прижата, скручивайте грудную клетку к тазу.', 'easy', 'https://picsum.photos/id/33/400/300', 7),
+        ('Ягодичный мост', 'Начальный уровень', 'Упритесь лопатками в скамью, поднимайте таз.', 'easy', 'https://picsum.photos/id/38/400/300', 8),
+    ]
+    for name, desc, tech, diff, img, mg_id in exercises:
+        cur.execute("""
+            INSERT INTO exercise (name, description, technique, difficulty, photo_url, muscle_group_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+        """, (name, desc, tech, diff, img, mg_id))
+    
+    # Тестовый пользователь (если ещё нет)
+    hashed = generate_password_hash('student')
+    cur.execute("""
+        INSERT INTO "user" (email, password, role)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (email) DO NOTHING
+    """, ('student@example.com', hashed, 'student'))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {"message": "База данных успешно заполнена!"}
