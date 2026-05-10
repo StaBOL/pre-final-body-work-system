@@ -17,11 +17,20 @@ def register():
     return jsonify({'msg': 'User created successfully'}), 201
 
 def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    user = query_one('SELECT id, password FROM "user" WHERE email = %s', (email,))
-    if not user or not check_password_hash(user['password'], password):
-        return jsonify({'msg': 'Invalid credentials'}), 401
-    access_token = create_access_token(identity=str(user['id']))
-    return jsonify({'access_token': access_token, 'user_id': user['id'], 'role': 'student'})
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({'msg': 'Email and password required'}), 400
+
+        # Убедитесь, что таблица называется "user" (с кавычками в запросе)
+        user = query_one('SELECT id, password FROM "user" WHERE email = %s', (email,))
+        if not user or not check_password_hash(user['password'], password):
+            return jsonify({'msg': 'Invalid credentials'}), 401
+
+        access_token = create_access_token(identity=str(user['id']))
+        return jsonify({'access_token': access_token, 'user_id': user['id'], 'role': 'student'})
+    except Exception as e:
+        # Вернём подробную ошибку в JSON
+        return jsonify({'error': str(e), 'type': str(type(e))}), 500
