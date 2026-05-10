@@ -46,7 +46,6 @@
                 container.innerHTML = '<p>Ошибка загрузки тренировок.</p>';
             }
         }
-
         async function deleteWorkout(workoutId) {
             if (!confirm('Вы уверены, что хотите завершить (удалить) эту тренировку?')) return;
             try {
@@ -56,12 +55,11 @@
                 });
                 if (!response.ok) throw new Error(await response.text());
                 alert('Тренировка завершена и удалена');
-                loadWorkouts(); // обновить список
+                loadWorkouts();
             } catch (err) {
                 alert('Ошибка: ' + err.message);
             }
         }
-
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -71,7 +69,6 @@
                 return m;
             });
         }
-
         loadWorkouts();
     </script>
 </body>
