@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory
 from flask_jwt_extended import JWTManager
 from backend.config import Config
 from backend.db import close_db, init_db
+import os
 
 def create_app():
     app = Flask(__name__, static_folder='frontend')
@@ -34,6 +35,15 @@ def create_app():
     @app.route('/<path:path>')
     def static_files(path):
         return send_from_directory('frontend', path)
+
+    # Временный маршрут для создания тестового index.html
+    @app.route('/create-index')
+    def create_index():
+        os.makedirs('frontend', exist_ok=True)
+        test_html = '<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Hello from Render!</h1><p>If you see this, static files work.</p></body></html>'
+        with open('frontend/index.html', 'w', encoding='utf-8') as f:
+            f.write(test_html)
+        return 'Index file created. Now visit /index.html'
 
     return app
 
